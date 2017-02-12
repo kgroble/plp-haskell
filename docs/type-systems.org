@@ -1,0 +1,85 @@
+
+* What Are Types?
+  - They define how the bits at some location of a computer should be represented.
+  - Define behavior at compile time
+  - Move certain bugs from runtime to compile time
+
+** Types of Typing
+*** Sound Types Systems
+    Provide some kind of guarantee about your program. Your program /will not/
+    compile if it does not meet these guarantees. This is in contrast to
+    something like C's typing system, which will give you warnings but cannot
+    prove anything on its own.
+
+*** Explicit vs Implicit
+**** Explicit
+     These are typing systems as we generally think about them. Java wants you
+     to say that your variable is an int, C wants you to say that you've made a
+     pointer to a char array.
+
+**** Implicit
+     These are typing systems like Haskell or Elm. To the extent that it can,
+     the typing system will try to figure out what the types of your variables
+     and functions are. If it cannot, or if what you've given it does not make
+     sense, the compiler will complain. Or Scream. It will not compile.
+
+*** Static vs Dynamic Typing
+**** Static Typing
+    In purely static typing, the compiler decides the type and then the type is
+    'left behind' at runtime. There is no runtime type checking, because the
+    compiler already checked the behavior and said whether or not you were
+    trying to do something reasonable.
+
+    Note that static typing does not require that you actually declare the
+    types. Static typing does not necessarily mean implicit.
+
+    In reference to static typing and waterfall methods of development
+    "There is nothing in the core ideas of static type systems that has anything
+    to do with separating interface from implementation, declaring all variables
+    in advance, or any of these other organizational restrictions. They are
+    sometimes carry-overs from times when it was considered normal for
+    programmers to cater to the needs of their compilers."
+
+    Because languages like C and Java don't include REPLs there is an idea that
+    you need dynamically typed languages for exploratory programming, but
+    languages like Haskell say otherwise. Tools and languages are separate.
+
+**** Dynamic Typing
+    In purely dynamic typing, no work is done at run time. Values carry their
+    values around with them, and their behavior is decided when needed.
+
+*** Duck Typing
+    If it looks like a duck and talks like a duck, it is a duck. Instead of
+    checking the type itself, the compiler or interpreter will instead check
+    that the given operations are defined on the given data.
+
+
+
+* Haskell in Comparison to Object Oriented Languages
+  Types is Haskell should not be thought of exactly like types in Java or other
+  object oriented languages. There is no real work done by types; type only
+  restrict the number of possible programs. This is done with the intention of
+  reducing the number of possible bugs in a program. With a strong enough type
+  system you can do things like enforce possible list accesses, enforce matrix
+  sizes in matrix multiplication, and maintain tree structures. Objects do not
+  serve the exact same purpose. They do restrict the number of possible
+  programs, but they also provide namespaces (in Java)
+
+* Dependent Typing
+
+
+* Linear Typing
+  Linear typing requires that only a single reference be held to any given
+  object at any given time. This allows the language to avoid repeated copies of
+  objects. This maintains the type safety of languages like Haskell but doesn't
+  result in the same performance hit.
+
+* Conclusions
+  - Type systems are far more complex than I had initially believed.
+
+
+* Links
+  - About static typing systems in general
+    http://web.archive.org/web/20080509165811/http://perl.plover.com/yak/typing/notes.html
+  - About static vs dynamic typing
+    https://cdsmith.wordpress.com/2011/01/09/an-old-article-i-wrote/
