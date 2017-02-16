@@ -1,2 +1,8 @@
-main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+import BinaryTreeSpec
+import Test.HUnit
+
+tests :: [Test]
+tests = containsTests
+
+main :: IO Counts
+main = runTestTT $ TestList tests
