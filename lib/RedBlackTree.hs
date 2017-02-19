@@ -16,6 +16,7 @@ module RedBlackTree ( RedBlackTree
                     , contains
                     , height
                     , remove
+                    , pop
                     , toList ) where
 
 
@@ -44,14 +45,6 @@ deriving instance (Show a) => Show (RedBlackTree a)
 
 
 
-data MaybeRedInsTree :: NaturalNum -> * -> * where
-  MaybeRedInsRoot :: ColorTypeValue c -> Tree cL n a -> a -> Tree cR n a -> MaybeRedInsTree (MaybeIncrement c n) a
-  MaybeRedInsEmpty :: MaybeRedInsTree Z a
-
-data MaybeRedRemTree :: NaturalNum -> * -> * where
-  MaybeRedRemRoot :: ColorTypeValue c -> Tree cL n a -> a -> Tree cR n a -> MaybeRedRemTree (MaybeDecrement c n) a
-  MaybeRedRemEmpty :: MaybeRedRemTree (S Z) a
-
 
 -- This is so we can write functions which do not care what the color of the
 -- tree is. Without this, we would have an explosion on the number of functions
@@ -66,6 +59,15 @@ data AbsorbColorInsertTree :: NaturalNum -> * -> * where
 data AbsorbColorRemoveTree :: NaturalNum -> * -> * where
   AbsorbRedRemove :: Tree Red n a -> AbsorbColorRemoveTree n a
   AbsorbBlackRemove :: Tree Black n a -> AbsorbColorRemoveTree n a
+
+
+data MaybeRedInsTree :: NaturalNum -> * -> * where
+  MaybeRedInsRoot :: ColorTypeValue c -> Tree cL n a -> a -> Tree cR n a -> MaybeRedInsTree (MaybeIncrement c n) a
+  MaybeRedInsEmpty :: MaybeRedInsTree Z a
+
+data MaybeRedRemTree :: NaturalNum -> * -> * where
+  MaybeRedRemRoot :: ColorTypeValue c -> Tree cL n a -> a -> Tree cR n a -> MaybeRedRemTree (MaybeDecrement c n) a
+  MaybeRedRemEmpty :: MaybeRedRemTree (S Z) a
 
 
 
@@ -164,10 +166,16 @@ treeHeight (RTree left _ right) =
   1 + max (treeHeight left) (treeHeight right)
 
 
+treeSmallest :: (Monad m) => Tree c n a -> m a
+treeSmallest (RTree Empty item _) = return item
+treeSmallest (BTree Empty item _) = return item
+treeSmallest (RTree left item _) = treeSmallest left
+treeSmallest (BTree left item _) = treeSmallest left
+
+
 -- blackTreeRemove :: (Ord a) => Tree Black n a -> a -> MaybeRedRemTree n a
 -- blackTreeRemove (BTree Empty curr Empty) item
---   | curr == item = MaybeRedRemEmpty
---   | otherwise = MaybeRedRemRoot BlackTypeValue Empty curr Empty
+--   | item < curr = MaybeRedRemRoot BlackTypeValue Empty curr Empty
 
 -- redTreeRemove :: (Ord a) => Tree Red n a -> a -> AbsorbColorRemoveTree n a
 -- redTreeRemove (RTree Empty curr Empty) item
@@ -268,34 +276,7 @@ remove :: (Ord a) => a -> RedBlackTree a -> RedBlackTree a
 remove item t = foldl (flip insertRBT) emptyRBT $ filter (/= item) $ toList t
 
 
-
--- This is impossible for really difficult to understand reasons. You lose the
--- type safety if you write a function which can return any of the types of our
--- GADTs. The you cannot check type safety if you do not know the return type of
--- a function.
-
--- data NaturalNum = Z
---                 | S NaturalNum
---                 deriving Show
-
--- data Color :: * where
---   Red :: Color
---   Black :: Color
---   deriving Show
-
--- data Tree :: Color -> NaturalNum -> * -> * where
---   Empty :: Tree Black Z a
---   RTree :: Tree Black natNum a     -> a -> Tree Black natNum a      -> Tree Red natNum a
---   BTree :: Tree leftColor natNum a -> a -> Tree rightColor natNum a -> Tree Black (S natNum) a
--- deriving instance (Show a) => Show (Tree c n a)
-
--- findSubtree :: (Ord a) => Tree c n a -> (forall cc nn. Tree cc nn a)
--- findSubtree Empty _ = Empty
--- findSubtree (RTree left curr right) item
---   | curr == item = RTree left curr right
---   | curr < item  = findSubtree left item
---   | otherwise    = findSubtree right item
--- findSubtree (BTree left curr right) item
---   | curr == item = BTree left curr right
---   | curr < item  = findSubtree left item
---   | otherwise    = findSubtree right item
+pop :: (Ord a, Monad m) => RedBlackTree a -> m (a, RedBlackTree a)
+pop rbt@(Root t) =
+  let Just smallest = treeSmallest t
+  in return (smallest, remove smallest rbt)
