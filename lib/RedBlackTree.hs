@@ -2,48 +2,39 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE StandaloneDeriving #-}
 {-# OPTIONS_GHC -fno-warn-unticked-promoted-constructors #-}
+
+-- Used https://www.cis.upenn.edu/~sweirich/talks/typelevel16.pdf to help us code this
 
 module RedBlackTree where
 
 
+-- ~~~~~~~~~~ Types ~~~~~~~~~~
+
 data NaturalNum = Z
                 | S NaturalNum
+                deriving Show
 
--- data Color = Red | Black
 
 data Color :: * where
   Red :: Color
   Black :: Color
-
--- Equivalent
--- data List a = Nada | Something a
-data Possibly :: * -> * where
-  Nada :: Possibly a
-  Something :: a -> Possibly a
-
-foobar False = Nada
-foobar True = Something True
-
-
-
--- data Tree c n a = Empty Black Z a
---                 | RTree (Tree Black n a) a (Tree Black n a)
---                 | BTree (lc n a) a (Tree rc n a)
-
+  deriving Show
 
 -- our core
 data Tree :: Color -> NaturalNum -> * -> * where
   Empty :: Tree Black Z a
   RTree :: Tree Black natNum a     -> a -> Tree Black natNum a      -> Tree Red natNum a
   BTree :: Tree leftColor natNum a -> a -> Tree rightColor natNum a -> Tree Black (S natNum) a
-
+deriving instance (Show a) => Show (Tree c n a)
 
 data RedBlackTree :: * -> * where
   Root :: Tree Black natNum a -> RedBlackTree a
+deriving instance (Show a) => Show (RedBlackTree a)
+
 
 
 data MaybeRedRootTree :: NaturalNum -> * -> * where
@@ -54,10 +45,11 @@ data MaybeRedRootTree :: NaturalNum -> * -> * where
 -- tree is. Without this, we would have an explosion on the number of functions
 -- which deal with either red or black trees. We do not want to throw out the
 -- color information, so it is put in the constructior so we can still pattern
--- match against it.
+-- match against it. Needs to be nonempty so the conversion to MaybeRedRootTrees
+-- is valid
 data AbsorbColorTree :: NaturalNum -> * -> * where
   AbsorbRed   :: Tree Red n a -> AbsorbColorTree n a
-  AbsorbBlack :: Tree Black n a -> AbsorbColorTree n a
+  AbsorbBlack :: Tree Black (S n) a -> AbsorbColorTree (S n) a
 
 
 
@@ -80,39 +72,52 @@ data ColorTypeValue :: Color -> * where
 
 
 
-contains :: (Ord a) => RedBlackTree a -> a -> Bool
-
-contains (Root t) = treeContains t
 
 
-treeContains :: (Ord a) => Tree c n a -> a -> Bool
 
-treeContains Empty _ = False
+-- ~~~~~~~~~~ Utility Functions ~~~~~~~~~~
 
-treeContains (RTree left curr right) dat
-  | dat == curr = True
-  | dat < curr  = treeContains left dat
-  | otherwise   = treeContains right dat
-
-treeContains (BTree left curr right) dat
-  | dat ==  curr = True
-  | dat < curr   = treeContains left dat
-  | otherwise    = treeContains right dat
+absorbColorToMaybeRedRoot :: AbsorbColorTree n a -> MaybeRedRootTree n a
+absorbColorToMaybeRedRoot (AbsorbRed (RTree left x right)) =
+  MaybeRedRoot RedTypeValue left x right
+absorbColorToMaybeRedRoot (AbsorbBlack (BTree left x right)) =
+  MaybeRedRoot BlackTypeValue left x right
 
 
--- This is impossible for really difficult to understand reasons. You lose the
--- type safety if you write a function which can return any of the types of our
--- GADTs. The you cannot check type safety if you do not know the return type of
--- a function.
--- findSubtree Empty _ = Empty
--- findSubtree (RTree left curr right) item
---   | curr == item = RTree left curr right
---   | curr < item  = findSubtree left item
---   | otherwise    = findSubtree right item
--- findSubtree (BTree left curr right) item
---   | curr == item = BTree left curr right --   | curr < item  = findSubtree left item
---   | otherwise    = findSubtree right item
+turnRootBlack :: MaybeRedRootTree n a -> RedBlackTree a
+turnRootBlack (MaybeRedRoot _ left val right) =
+  Root $ BTree left val right
 
+
+insertIntoBlack :: (Ord a) => a -> Tree Black n a -> AbsorbColorTree n a
+insertIntoBlack item Empty =
+  AbsorbRed $ RTree Empty item Empty
+insertIntoBlack item (BTree left curr right)
+  | item < curr = blackBalanceLeft (insertTree item left) curr right
+  | item > curr = blackBalanceRight left curr (insertTree item right)
+  | otherwise = AbsorbBlack (BTree left curr right)
+
+
+insertIntoRed :: (Ord a) => a -> Tree Red n a -> MaybeRedRootTree n a
+insertIntoRed item (RTree left curr right)
+  | item < curr = redBalanceLeft (insertIntoBlack item left) curr right
+  | item > curr = redBalanceRight left curr (insertIntoBlack item right)
+  | otherwise = MaybeRedRoot RedTypeValue left curr right
+
+
+
+
+insertTree :: (Ord a) => a -> Tree c n a -> MaybeRedRootTree n a
+insertTree item Empty =
+  absorbColorToMaybeRedRoot $ insertIntoBlack item Empty
+insertTree item (BTree left curr right) =
+  absorbColorToMaybeRedRoot $ insertIntoBlack item (BTree left curr right)
+insertTree item (RTree left curr right) =
+  insertIntoRed item (RTree left curr right)
+
+
+
+-- ~~~~~~~~~~ Rotations ~~~~~~~~~~
 
 -- non rotation cases. Just convert between types of trees
 redBalanceLeft :: AbsorbColorTree n a -> a -> Tree c n a -> MaybeRedRootTree n a
@@ -164,10 +169,38 @@ blackBalanceRight left x (MaybeRedRoot RedTypeValue (BTree rll rlx rlr) rx (BTre
 
 
 
--- treeInsert :: Tree c n a -> a -> MaybeRedRootTree n a
--- treeInsert Empty item =
---   MaybeRedRoot RedTypeValue Empty item Empty
+-- ~~~~~~~~~~ Actual Functionality ~~~~~~~~~~
 
---   -- RTree :: Tree Black natNum a     -> a -> Tree Black natNum a      -> Tree Red natNum a
--- treeInsert (BTree left curr right) item
---   | item < curr = MaybeRedRoot BlackTypeValue (treeInsert left item) curr right
+contains :: (Ord a) => a -> RedBlackTree a -> Bool
+contains item (Root t) = treeContains item t
+
+
+treeContains :: (Ord a) => a -> Tree c n a -> Bool
+treeContains _ Empty = False
+treeContains dat (RTree left curr right)
+  | dat == curr = True
+  | dat < curr  = treeContains dat left
+  | otherwise   = treeContains dat right
+treeContains dat (BTree left curr right)
+  | dat ==  curr = True
+  | dat < curr   = treeContains dat left
+  | otherwise    = treeContains dat right
+
+
+insertRBT :: (Ord a) => a -> RedBlackTree a -> RedBlackTree a
+insertRBT item (Root t) =
+  turnRootBlack $ insertTree item t
+
+
+-- This is impossible for really difficult to understand reasons. You lose the
+-- type safety if you write a function which can return any of the types of our
+-- GADTs. The you cannot check type safety if you do not know the return type of
+-- a function.
+-- findSubtree Empty _ = Empty
+-- findSubtree (RTree left curr right) item
+--   | curr == item = RTree left curr right
+--   | curr < item  = findSubtree left item
+--   | otherwise    = findSubtree right item
+-- findSubtree (BTree left curr right) item
+--   | curr == item = BTree left curr right --   | curr < item  = findSubtree left item
+--   | otherwise    = findSubtree right item
