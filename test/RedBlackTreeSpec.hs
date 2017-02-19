@@ -1,4 +1,5 @@
 module RedBlackTreeSpec ( testContains
+                        , testRemove
                         , testInsert )
 where
 
@@ -23,6 +24,14 @@ testInsert =
   , sort [1000,999..0] == toList (foldl (flip insertRBT) emptyRBT [1000,999..0])
   , sort [1000,995..0] == toList (foldl (flip insertRBT) emptyRBT [1000,995..0])
   , sort [1000,995..0] /= toList (foldl (flip insertRBT) emptyRBT [1000,995..1])
+  ]
+
+
+testRemove :: [Test]
+testRemove =
+  map (TestCase . assertBool "Failed on an 'remove' test")
+  [ [] == toList (remove 1 emptyRBT)
+  , [] == toList (remove 1 (insertRBT 1 emptyRBT))
   ]
 
 
