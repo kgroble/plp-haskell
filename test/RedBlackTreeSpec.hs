@@ -32,6 +32,7 @@ testRemove =
   map (TestCase . assertBool "Failed on an 'remove' test")
   [ [] == toList (remove 1 emptyRBT)
   , [] == toList (remove 1 (insertRBT 1 emptyRBT))
+  , [1] == toList (foldl (flip remove) (foldl (flip insertRBT) emptyRBT [1,2..100]) [2,3..100])
   ]
 
 
