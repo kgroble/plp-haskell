@@ -169,8 +169,9 @@ treeHeight (RTree left _ right) =
 treeSmallest :: (Monad m) => Tree c n a -> m a
 treeSmallest (RTree Empty item _) = return item
 treeSmallest (BTree Empty item _) = return item
-treeSmallest (RTree left item _) = treeSmallest left
-treeSmallest (BTree left item _) = treeSmallest left
+treeSmallest (RTree left _ _) = treeSmallest left
+treeSmallest (BTree left _ _) = treeSmallest left
+treeSmallest Empty = fail ""
 
 
 -- blackTreeRemove :: (Ord a) => Tree Black n a -> a -> MaybeRedRemTree n a
