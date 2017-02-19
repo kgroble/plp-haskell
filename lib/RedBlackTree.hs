@@ -9,7 +9,12 @@
 
 -- Used https://www.cis.upenn.edu/~sweirich/talks/typelevel16.pdf to help us code this
 
-module RedBlackTree where
+module RedBlackTree ( RedBlackTree
+                    , insertRBT
+                    , emptyRBT
+                    , contains
+                    , height
+                    , toList ) where
 
 
 -- ~~~~~~~~~~ Types ~~~~~~~~~~
@@ -105,8 +110,6 @@ insertIntoRed item (RTree left curr right)
   | otherwise = MaybeRedRoot RedTypeValue left curr right
 
 
-
-
 insertTree :: (Ord a) => a -> Tree c n a -> MaybeRedRootTree n a
 insertTree item Empty =
   absorbColorToMaybeRedRoot $ insertIntoBlack item Empty
@@ -114,6 +117,35 @@ insertTree item (BTree left curr right) =
   absorbColorToMaybeRedRoot $ insertIntoBlack item (BTree left curr right)
 insertTree item (RTree left curr right) =
   insertIntoRed item (RTree left curr right)
+
+
+treeContains :: (Ord a) => a -> Tree c n a -> Bool
+treeContains _ Empty = False
+treeContains dat (RTree left curr right)
+  | dat == curr = True
+  | dat < curr  = treeContains dat left
+  | otherwise   = treeContains dat right
+treeContains dat (BTree left curr right)
+  | dat ==  curr = True
+  | dat < curr   = treeContains dat left
+  | otherwise    = treeContains dat right
+
+
+treeToList :: Tree c n a -> [a]
+treeToList Empty = []
+treeToList (RTree left x right) =
+  treeToList left ++ [x] ++ treeToList right
+treeToList (BTree left x right) =
+  treeToList left ++ [x] ++ treeToList right
+
+
+treeHeight :: Tree c n a -> Int
+treeHeight Empty = 0
+treeHeight (BTree left _ right) =
+  1 + max (treeHeight left) (treeHeight right)
+treeHeight (RTree left _ right) =
+  1 + max (treeHeight left) (treeHeight right)
+
 
 
 
@@ -175,21 +207,24 @@ contains :: (Ord a) => a -> RedBlackTree a -> Bool
 contains item (Root t) = treeContains item t
 
 
-treeContains :: (Ord a) => a -> Tree c n a -> Bool
-treeContains _ Empty = False
-treeContains dat (RTree left curr right)
-  | dat == curr = True
-  | dat < curr  = treeContains dat left
-  | otherwise   = treeContains dat right
-treeContains dat (BTree left curr right)
-  | dat ==  curr = True
-  | dat < curr   = treeContains dat left
-  | otherwise    = treeContains dat right
-
-
 insertRBT :: (Ord a) => a -> RedBlackTree a -> RedBlackTree a
 insertRBT item (Root t) =
   turnRootBlack $ insertTree item t
+
+
+emptyRBT :: RedBlackTree a
+emptyRBT = Root Empty
+
+
+toList :: RedBlackTree a -> [a]
+toList (Root t) =
+  treeToList t
+
+
+height :: RedBlackTree a -> Int
+height (Root t) =
+  treeHeight t
+
 
 
 -- This is impossible for really difficult to understand reasons. You lose the

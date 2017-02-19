@@ -1,8 +1,8 @@
-import BinaryTreeSpec
+import RedBlackTreeSpec
 import Test.HUnit
 
 tests :: [Test]
-tests = containsTests
+tests = testContains ++ testInsert
 
 main :: IO Counts
 main = runTestTT $ TestList tests
