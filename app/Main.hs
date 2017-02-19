@@ -1,8 +1,6 @@
 module Main where
 
 import LineSegment
-import qualified Data.Text as T
-
 
 getLineSeg :: String -> LineSeg
 getLineSeg = read
