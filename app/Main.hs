@@ -1,6 +1,6 @@
 module Main where
 
-import LineSegment
+import BentleyOttmann
 
 getLineSeg :: String -> LineSeg
 getLineSeg = read
@@ -9,4 +9,4 @@ getLineSeg = read
 main :: IO ()
 main = do
   content <- readFile "input/line-segments"
-  putStrLn $ show $ map getLineSeg (lines content)
+  putStrLn $ show $ findIntersections $ foldl (flip (:)) [] $ map getLineSeg (lines content)
