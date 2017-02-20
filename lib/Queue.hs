@@ -34,21 +34,26 @@ getMin :: Queue a -> Maybe a
 getMin Empty = Nothing
 getMin (Queue _ _ a _) = Just a
 
-deleteMin :: Ord a => Queue a -> Queue a
-deleteMin Empty = Empty
-deleteMin (Queue _ left _ right) =
-  merge left right
+deleteMin :: Ord a => Queue a -> Maybe (a, Queue a)
+deleteMin q =
+  case getMin q of
+    Nothing -> Nothing
+    Just x -> Just (x, delete x q)
+-- deleteMin Empty = Nothing
+-- deleteMin (Queue _ left _ right) =
+--   merge left right
 
-rebalance :: Ord a => Queue a -> Queue a 
+rebalance :: Queue a -> Queue a 
 rebalance (Queue _ left a right)
   | rank left < rank right = Queue (rank left + 1) right a left
   | otherwise = Queue (rank right + 1) left a right 
+rebalance Empty = Empty
 
 deleteHelp :: Ord a => a -> Queue a -> Queue a
-deleteHelp i Empty = Empty
-deleteHelp i (Queue rank left a right) 
+deleteHelp _ Empty = Empty
+deleteHelp i (Queue r left a right) 
   | i == a = merge left right
-  | otherwise = Queue rank (deleteHelp i left) a (deleteHelp i right)
+  | otherwise = Queue r (deleteHelp i left) a (deleteHelp i right)
 
 delete :: Ord a => a -> Queue a -> Queue a
 delete a queue = rebalance (deleteHelp a queue) 

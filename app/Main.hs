@@ -8,7 +8,7 @@ getLineSeg :: String -> LineSeg
 getLineSeg str = lineSegFromPoint (read str::((Double, Double), (Double, Double)))
 
 lineSegFromPoint :: ((Double, Double), (Double, Double)) -> LineSeg
-lineSegFromPoint (p1@(_, _), p2@(_, _)) = constructLineSeg p1 p2
+lineSegFromPoint (p1, p2) = constructLineSeg p1 p2
 
 formatOut :: String -> String
 formatOut = replace "),(" ")\n(" . replace "[" "" . replace "]" ""

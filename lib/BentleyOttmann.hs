@@ -5,6 +5,7 @@ module BentleyOttmann ( findIntersections
 
 import Data.Function (fix)
 import BinTree
+import Queue
 
 type X = Double
 type Y = Double
@@ -34,18 +35,11 @@ instance Ord XEvent where
   event1 < event2 = extractX event1 < extractX event2
   event1 <= event2 = event1 < event2 || event1 == event2
 
--- instance Ord LineSeg where
---   (LineSeg (ax1, _) (_, _)) < l2 =
---     case intersectX l2 ax1 of
---       Nothing -> False
---       Just (x, _) -> ax1 < x
---   l1 <= l2 = (l1 == l2) || l1 < l2
-
-type EventQueue = BinTree XEvent
+type EventQueue = Queue XEvent
 type LineTree = BinTree LineSeg
 
 loadEventQueue :: [LineSeg] -> EventQueue
-loadEventQueue listOfLines = foldl (flip insert) empty (map LeftEndPoint listOfLines)
+loadEventQueue listOfLines = foldl (flip Queue.insert) Queue.empty (map LeftEndPoint listOfLines)
 
 intersect :: LineSeg -> LineSeg -> Maybe Point
 intersect (LineSeg (ax1, ay1) (ax2, ay2)) (LineSeg (bx1, by1) (bx2, by2)) =
@@ -149,7 +143,7 @@ addNeighbor x line1 line2 queue =
   case intersect line1 line2 of
     Nothing -> queue
     (Just p@(xInt, _)) -> if x < xInt
-                          then insert (Intersection line1 line2 p) queue
+                          then Queue.insert (Intersection line1 line2 p) queue
                           else queue
 
 removeNeighbor :: X -> LineSeg -> LineSeg -> EventQueue -> EventQueue
@@ -157,15 +151,15 @@ removeNeighbor x line1 line2 queue =
   case intersect line1 line2 of
     Nothing -> queue
     (Just p@(xInt, _)) -> if x < xInt
-                          then delete (Intersection line1 line2 p) queue
+                          then Queue.delete (Intersection line1 line2 p) queue
                           else queue
 
 findIntersections :: [LineSeg] -> [Point]
 findIntersections listOfLines =
   let
-    start = (loadEventQueue listOfLines, empty, [])
+    start = (loadEventQueue listOfLines, BinTree.empty, [])
     end = (`fix` start) $ \loop (queue, tree, foundPoints) ->
-                             case viewMin queue of
+                             case deleteMin queue of
                                Nothing -> foundPoints
                                Just (removed, newQueue) ->
                                  case removed of
