@@ -57,3 +57,20 @@ deleteHelp i (Queue r left a right)
 
 delete :: Ord a => a -> Queue a -> Queue a
 delete a queue = rebalance (deleteHelp a queue) 
+
+--used for test cases
+listToQueue :: Ord a => [a] -> Queue a
+listToQueue a = makeQueue a Empty
+
+makeQueue :: Ord a => [a] -> Queue a -> Queue a
+makeQueue [] queue = queue
+makeQueue (head:tail) queue =
+  makeQueue tail (insert head queue)
+
+
+member :: Ord a => a -> Queue a -> Bool
+member i Empty = False
+member i (Queue _ left a right) 
+  | i == a = True
+  | otherwise = member i left || member i right
+
