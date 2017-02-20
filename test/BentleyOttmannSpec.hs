@@ -22,6 +22,7 @@ testIntersection =
                                      , constructLineSeg (-1, -1) (1, 1)
                                      , constructLineSeg (-1, -1) (1, 1) ]
 
+  -- a triangle
   , sort [(-1.0,0.0),(2.0,0.0),(0.0, 2.0)]
       == sort (findIntersections [ constructLineSeg (-2,-2) (0.5,3)
                                  , constructLineSeg (-4,0) (4,0)
