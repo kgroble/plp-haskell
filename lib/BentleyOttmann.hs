@@ -1,5 +1,6 @@
 module BentleyOttmann ( findIntersections
-                      , LineSeg ) where
+                      , LineSeg
+                      , constructLineSeg ) where
 
 import Data.Function (fix)
 import BinTree
@@ -15,6 +16,13 @@ data XEvent = LeftEndPoint LineSeg
             | RightEndPoint LineSeg
             | Intersection LineSeg LineSeg Point
            deriving (Show, Eq)
+
+
+constructLineSeg :: Point -> Point -> LineSeg
+constructLineSeg p1 p2
+  | p1 <= p2 = LineSeg p1 p2
+  | otherwise = LineSeg p2 p1
+
 
 extractX :: XEvent -> X
 extractX (LeftEndPoint (LineSeg (x, _) _)) = x

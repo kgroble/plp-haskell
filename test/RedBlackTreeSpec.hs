@@ -8,6 +8,10 @@ import RedBlackTree as RBT
 import Test.HUnit
 import Data.List
 
+
+emptyTree :: RedBlackTree Int
+emptyTree = emptyRBT
+
 testTree1 :: RedBlackTree Int
 testTree1 = foldl (flip insertRBT) emptyRBT [1,2..10]
 
@@ -43,6 +47,9 @@ testSmallest =
   [ 0 == case (pop $ insertRBT 0 emptyRBT) of
            (Just item, rbt) -> item
            (Nothing, rbt) -> error "AHHH"
+  , case pop emptyTree of
+      (Nothing, _) -> True
+      (Just _, _) -> False
   ]
 
 
