@@ -32,10 +32,23 @@ swap a t1 t2
 
 getMin :: Queue a -> Maybe a
 getMin Empty = Nothing
-getMin (Queue _ _  a _) = Just a
+getMin (Queue _ _ a _) = Just a
 
 deleteMin :: Ord a => Queue a -> Queue a
 deleteMin Empty = Empty
 deleteMin (Queue _ left _ right) =
   merge left right
 
+rebalance :: Ord a => Queue a -> Queue a 
+rebalance (Queue _ left a right)
+  | rank left < rank right = Queue (rank left + 1) right a left
+  | otherwise = Queue (rank right + 1) left a right 
+
+deleteHelp :: Ord a => a -> Queue a -> Queue a
+deleteHelp i Empty = Empty
+deleteHelp i (Queue rank left a right) 
+  | i == a = merge left right
+  | otherwise = Queue rank (deleteHelp i left) a (deleteHelp i right)
+
+delete :: Ord a => a -> Queue a -> Queue a
+delete a queue = rebalance (deleteHelp a queue) 
