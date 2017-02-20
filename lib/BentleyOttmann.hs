@@ -41,6 +41,8 @@ type LineTree = BinTree LineSeg
 loadEventQueue :: [LineSeg] -> EventQueue
 loadEventQueue listOfLines = foldl (flip Queue.insert) Queue.empty (map LeftEndPoint listOfLines)
 
+-- Nothing if two segments don't intersect.
+-- Just their intersection point otherwise.
 intersect :: LineSeg -> LineSeg -> Maybe Point
 intersect (LineSeg (ax1, ay1) (ax2, ay2)) (LineSeg (bx1, by1) (bx2, by2)) =
   let
@@ -58,6 +60,7 @@ intersect (LineSeg (ax1, ay1) (ax2, ay2)) (LineSeg (bx1, by1) (bx2, by2)) =
     then Just (x, y)
     else Nothing
 
+-- Similar: Intersect the vertical sweep line (x) with a segment.
 intersectX :: LineSeg -> X -> Maybe Point
 intersectX (LineSeg (x1, y1) (x2, y2)) x
   | x < x1 || x2 < x = Nothing
@@ -65,14 +68,16 @@ intersectX (LineSeg (x1, y1) (x2, y2)) x
     let y = y1 + ((y2 - y1) / (x2 - x1)) * (x - x1)
     in Just (x, y)
 
+-- Lines are compared by their y coordinate at the sweep line.
+-- If they don't intersect the sweep line, arbitrary.
 lineOrder :: X -> LineSeg -> Double
 lineOrder x line =
   case intersectX line x of
     (Just (_, b)) -> b
     Nothing -> 0
 
--- findIntersections [LineSeg (-1, -1) (1, 1), LineSeg (-1, 1) (1, -1)]
 
+-- Insert a line and return updated neighbor information.
 insertLine :: X -> LineTree -> LineSeg -> (LineTree, [(LineSeg, LineSeg)], [(LineSeg, LineSeg)])
 insertLine x tree line =
   let
@@ -86,6 +91,7 @@ insertLine x tree line =
   in
     (newTree, newNeighbors, newEnemies)
 
+-- Delete a line and return updated neighbor information.
 deleteLine :: X -> LineTree -> LineSeg -> (LineTree,[(LineSeg, LineSeg)], [(LineSeg, LineSeg)])
 deleteLine x tree line =
   let
@@ -101,6 +107,8 @@ deleteLine x tree line =
   in
     (newTree, newNeighbors, newEnemies)
 
+-- Swap two lines (because the sweep line has moved past theis intersection).
+-- Return updated neighbor information.
 swapLines :: X -> LineTree -> LineSeg -> LineSeg -> (LineTree,[(LineSeg, LineSeg)], [(LineSeg, LineSeg)])
 swapLines x tree line1 line2 =
   let
@@ -114,22 +122,7 @@ swapLines x tree line1 line2 =
   in
     (newTree, newNeighbors, newEnemies)
 
--- neighbors :: LineSeg -> LineTree -> (Maybe LineSeg, Maybe LineSeg)
--- neighbors line tree =
---   listNeighbors line (toList tree)
-
--- listNeighbors :: LineSeg -> [LineSeg] -> (Maybe LineSeg, Maybe LineSeg)
--- listNeighbors _ [] = (Nothing, Nothing)
--- listNeighbors _ [_] = (Nothing, Nothing)
--- listNeighbors line [first, second]
---   | line == first = (Nothing, Just second)
---   | line == second = (Just first, Nothing)
---   | otherwise = (Nothing, Nothing)
--- listNeighbors line (first:second:third:rest)
---   | line == first = (Nothing, Just second)
---   | line == second = (Just first, Just third)
---   | otherwise = listNeighbors line (second:third:rest)
-
+-- Handle updated neighbor information
 updateEventQueue :: X -> [(LineSeg, LineSeg)] -> [(LineSeg, LineSeg)] -> EventQueue -> EventQueue
 updateEventQueue x new old queue =
   let

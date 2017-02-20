@@ -1,3 +1,10 @@
+-- Taken From: https://github.com/hi-ogawa/haskell_playground/blob/eca1254b3736ed8f7c90a1410a11ffdefacfdeb3/src/BinTree.hs
+-- Our tree did not have the capability to perform operations with a custom comparator passed in,
+-- So we are using this implementation (not a Red Black tree, but does provide the needed api)
+-- For our tree of lines in the Bentley Ottmann algorithm. The comments and functions here
+-- suggest using it for the event queue as well, but we are using our own priority queue for
+-- the event queue.
+
 module BinTree where
 
 data BinTree a
