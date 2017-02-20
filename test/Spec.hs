@@ -1,4 +1,4 @@
-
+import QueueSpec
 import BentleyOttmannSpec
 import RedBlackTreeSpec
 import Test.HUnit
@@ -8,7 +8,8 @@ tests = testContains ++
         testInsert ++
         testRemove ++
         testSmallest ++
-        testIntersection
+        testIntersection ++
+        testQueue
 
 main :: IO Counts
 main = runTestTT $ TestList tests
