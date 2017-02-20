@@ -67,7 +67,7 @@ data MaybeRedInsTree :: NaturalNum -> * -> * where
 
 data MaybeRedRemTree :: NaturalNum -> * -> * where
   MaybeRedRemRoot :: ColorTypeValue c -> Tree cL n a -> a -> Tree cR n a -> MaybeRedRemTree (MaybeDecrement c n) a
-  MaybeRedRemEmpty :: MaybeRedRemTree (S Z) a
+  MaybeRedRemEmpty :: MaybeRedRemTree Z a
 
 
 
@@ -80,8 +80,8 @@ type family MaybeIncrement (c::Color) (n::NaturalNum) :: NaturalNum where
   MaybeIncrement Black x = S x
 
 type family MaybeDecrement (c::Color) (n::NaturalNum) :: NaturalNum where
-  MaybeDecrement Red x = x
-  MaybeDecrement Black (S x) = x
+  MaybeDecrement Red (S x) = x
+  MaybeDecrement Black x = x
 
 
 -- We need this because we need to be able to pass colors as values. There is no
@@ -174,14 +174,15 @@ treeSmallest (BTree left _ _) = treeSmallest left
 treeSmallest Empty = fail ""
 
 
--- blackTreeRemove :: (Ord a) => Tree Black n a -> a -> MaybeRedRemTree n a
--- blackTreeRemove (BTree Empty curr Empty) item
---   | item < curr = MaybeRedRemRoot BlackTypeValue Empty curr Empty
+blackTreeRemove :: (Ord a) => Tree Black (S n) a -> a -> MaybeRedRemTree n a
+blackTreeRemove (BTree Empty curr Empty) item
+  | item /= curr = MaybeRedRemRoot BlackTypeValue Empty curr Empty
+  | otherwise = MaybeRedRemEmpty
 
--- redTreeRemove :: (Ord a) => Tree Red n a -> a -> AbsorbColorRemoveTree n a
--- redTreeRemove (RTree Empty curr Empty) item
---   | curr == item = AbsorbBlackRemove Empty
---   | otherwise = AbsorbRedRemove $ RTree Empty curr Empty
+redTreeRemove :: (Ord a) => Tree Red n a -> a -> AbsorbColorRemoveTree n a
+redTreeRemove (RTree Empty curr Empty) item
+  | curr == item = AbsorbBlackRemove Empty
+  | otherwise = AbsorbRedRemove $ RTree Empty curr Empty
 
 
 
@@ -277,7 +278,11 @@ remove :: (Ord a) => a -> RedBlackTree a -> RedBlackTree a
 remove item t = foldl (flip insertRBT) emptyRBT $ filter (/= item) $ toList t
 
 
-pop :: (Ord a, Monad m) => RedBlackTree a -> m (a, RedBlackTree a)
+pop :: (Ord a, Monad m) => RedBlackTree a -> (m a, RedBlackTree a)
 pop rbt@(Root t) =
-  let Just smallest = treeSmallest t
-  in return (smallest, remove smallest rbt)
+  let
+    smallest = treeSmallest t
+  in
+    case smallest of
+      Just small -> (return small, remove small rbt)
+      Nothing -> (fail "", rbt)

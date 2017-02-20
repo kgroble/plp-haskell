@@ -1,5 +1,6 @@
 module RedBlackTreeSpec ( testContains
                         , testRemove
+                        , testSmallest
                         , testInsert )
 where
 
@@ -33,6 +34,15 @@ testRemove =
   [ [] == toList (remove 1 emptyRBT)
   , [] == toList (remove 1 (insertRBT 1 emptyRBT))
   , [1] == toList (foldl (flip remove) (foldl (flip insertRBT) emptyRBT [1,2..100]) [2,3..100])
+  ]
+
+
+testSmallest :: [Test]
+testSmallest =
+  map (TestCase . assertBool "Failed on a 'smallest' case")
+  [ 0 == case (pop $ insertRBT 0 emptyRBT) of
+           (Just item, rbt) -> item
+           (Nothing, rbt) -> error "AHHH"
   ]
 
 

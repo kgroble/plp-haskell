@@ -2,7 +2,7 @@ import RedBlackTreeSpec
 import Test.HUnit
 
 tests :: [Test]
-tests = testContains ++ testInsert ++ testRemove
+tests = testContains ++ testInsert ++ testRemove ++ testSmallest
 
 main :: IO Counts
 main = runTestTT $ TestList tests
