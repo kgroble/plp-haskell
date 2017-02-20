@@ -1,4 +1,5 @@
-module BentleyOttmann where
+module BentleyOttmann ( findIntersections
+                      , LineSeg ) where
 
 import Data.Function (fix)
 import BinTree
