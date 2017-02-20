@@ -1,5 +1,6 @@
 module BentleyOttmann ( findIntersections
                       , LineSeg
+                      , Point, X, Y
                       , constructLineSeg ) where
 
 import Data.Function (fix)
@@ -19,8 +20,8 @@ data XEvent = LeftEndPoint LineSeg
 
 
 constructLineSeg :: Point -> Point -> LineSeg
-constructLineSeg p1 p2
-  | p1 <= p2 = LineSeg p1 p2
+constructLineSeg p1@(x1, _) p2@(x2, _)
+  | x1 <= x2 = LineSeg p1 p2
   | otherwise = LineSeg p2 p1
 
 
@@ -74,7 +75,7 @@ lineOrder :: X -> LineSeg -> Double
 lineOrder x line =
   case intersectX line x of
     (Just (_, b)) -> b
-    Nothing -> undefined
+    Nothing -> 0
 
 -- findIntersections [LineSeg (-1, -1) (1, 1), LineSeg (-1, 1) (1, -1)]
 
