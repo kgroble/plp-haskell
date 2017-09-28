@@ -4,18 +4,16 @@
 
 CSSE403 Programming Language Paradigms final project
 
-Presentation on 2/13
-
 To build and run:
 
     stack build
     stack exec final-project-exe
 
 
-Think of exercise where you could be using half of a data structure (which isn't cryptic at all)
-A list you can add to but not sort.
-A list with contains only works for Eq
-Anything could be reversed
+Implements the Bentley-Ottmann Algorithm for finding intersections of line segments,
+backed a Red-Black Tree and Priority Queue. We created a Red-Black Tree using dependent typing
+to enforce the color invariants at compile time (note - this is not the tree we ultimately
+plugged in to Bentley-Ottmann, as we ran out of time to get delete working properly).
 
 
 Useful Links:
